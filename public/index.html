@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIZ - Facebook Cookie Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    <style>
+        :root {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 240 10% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 72.2% 50.6%;
+            --primary-foreground: 0 85.7% 97.3%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 240 3.7% 15.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 240 4.9% 83.9%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        .logo-font {
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .shadow-glow {
+            box-shadow: 0 0 15px rgba(229, 9, 20, 0.5);
+        }
+
+        /* ShadCN UI styled components */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+
+        .btn-primary {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            background-color: hsl(var(--primary) / 0.9);
+        }
+
+        .btn-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .btn-secondary:hover {
+            background-color: hsl(var(--secondary) / 0.8);
+        }
+
+        .btn-fb {
+            background-color: #4267B2;
+            color: white;
+        }
+
+        .btn-fb:hover {
+            background-color: #365899;
+        }
+
+        .input {
+            display: flex;
+            height: 2.5rem;
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid hsl(var(--input));
+            background-color: transparent;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            color: hsl(var(--foreground));
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 1px hsl(var(--ring));
+        }
+
+        .card {
+            border-radius: 0.5rem;
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: auto;
+            max-width: 350px;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 50;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .toast-success {
+            border-left: 4px solid hsl(142.1 76.2% 36.3%);
+        }
+        
+        .toast-error {
+            border-left: 4px solid hsl(var(--destructive));
+        }
+
+        .progress {
+            height: 0.5rem;
+            border-radius: 9999px;
+            overflow: hidden;
+            background-color: hsl(var(--secondary));
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: hsl(var(--primary));
+            transition: width 0.2s ease-in-out;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 9999px;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .badge-primary {
+            background-color: hsl(var(--primary) / 0.1);
+            color: hsl(var(--primary));
+        }
+
+        .badge-secondary {
+            background-color: hsl(var(--secondary) / 0.1);
+            color: hsl(var(--secondary-foreground));
+        }
+
+        .badge-premium {
+            background-color: rgba(234, 179, 8, 0.1);
+            color: rgb(234, 179, 8);
+        }
+
+        .badge-admin {
+            background-color: rgba(147, 51, 234, 0.1);
+            color: rgb(147, 51, 234);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            border: 2px solid hsl(var(--muted));
+            border-top-color: hsl(var(--primary));
+            animation: spinner 0.8s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tab {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .tab-active {
+            color: hsl(var(--primary));
+        }
+
+        .tab-active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: hsl(var(--primary));
+        }
+        
+        /* Pricing card styles */
+        .pricing-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Account item styles */
+        .account-item {
+            transition: background-color 0.2s ease;
+        }
+        
+        .account-item:hover {
+            background-color: hsl(var(--secondary));
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Responsive form elements */
+        @media (max-width: 640px) {
+            .responsive-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Real-time indicator */
+        .real-time-indicator {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .real-time-indicator::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* Theme switcher */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2a2a2a;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .theme-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .theme-slider {
+            background-color: #4267B2;
+        }
+
+        input:checked + .theme-slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="app" class="flex min-h-screen flex-col">
+        <!-- Header -->
+        <header class="border-b border-gray-800 py-4">
+            <div class="container mx-auto px-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <h1 class="text-4xl md:text-5xl logo-font text-red-600 mr-2">WIZ</h1>
+                </div>
+                
+                <!-- Navigation -->
+                <nav id="nav-menu" class="hidden md:flex space-x-4 items-center">
+                    <button id="pricingBtn" class="btn btn-secondary py-1 px-3 text-sm">Pricing</button>
+                    <div id="loginRegisterBtns" class="flex space-x-2">
+                        <button id="loginBtn" class="btn btn-secondary py-1 px-3 text-sm">Login</button>
+                        <button id="registerBtn" class="btn btn-primary py-1 px-3 text-sm">Register</button>
+                    </div>
+                    <div id="userControls" class="hidden items-center space-x-2">
+                        <span id="userName" class="py-1 px-2 text-sm"></span>
+                        <span id="planBadge" class="badge badge-primary">Free</span>
+                        <button id="logoutBtn" class="btn btn-secondary py-1 px-3 text-sm">Logout</button>
+                    </div>
+                    <label class="theme-switch ml-2">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="theme-slider"></span>
+                    </label>
+                </nav>
+                
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" x2="20" y1="12" y2="12"></line>
+                        <line x1="4" x2="20" y1="6" y2="6"></line>
+                        <line x1="4" x2="20" y1="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="hidden md:hidden px-4 py-2 border-t border-gray-800">
+                <div class="flex flex-col space-y-2">
+                    <button id="mobilePricingBtn" class="btn btn-secondary py-1 px-3 text-sm w-full">Pricing</button>
+                    <div id="mobileLoginRegisterBtns" class="flex space-x-2">
+                        <button id="mobileLoginBtn" class="btn btn-secondary py-1 px-3 text-sm flex-1">Login</button>
+                        <button id="mobileRegisterBtn" class="btn btn-primary py-1 px-3 text-sm flex-1">Register</button>
+                    </div>
+                    <div id="mobileUserControls" class="hidden flex-col space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span id="mobileUserName" class="py-1 px-2 text-sm"></span>
+                            <span id="mobilePlanBadge" class="badge badge-primary">Free</span>
+                        </div>
+                        <button id="mobileLogoutBtn" class="btn btn-secondary py-1 px-3 text-sm w-full">Logout</button>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-sm">Dark Mode</span>
+                        <label class="theme-switch">
+                            <input type="checkbox" id="mobileThemeToggle">
+                            <span class="theme-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <main class="flex-1 container mx-auto px-4 py-6">
+            <!-- Pricing view -->
+            <div id="pricingView" class="max-w-5xl mx-auto fade-in">
+                <h2 class="text-3xl font-bold text-center mb-2">Choose Your Plan</h2>
+                <p class="text-center text-gray-400 mb-8">Get powerful tools to manage your Facebook cookies</p>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Free Plan -->
+                    <div class="pricing-card card p-6 border border-gray-800">
+                        <div class="mb-4">
+                            <h3 class="text-xl font-semibold">Free Plan</h3>
+                            <p class="text-sm text-gray-400 mt-1">Basic features for starters</p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <span class="text-3xl font-bold">₱0</span>
+                            <span class="text-sm text-gray-400">/forever</span>
+                        </div>
+                        
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Process up to 2 accounts</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Basic cookie retrieval</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Account management</span>
+                            </li>
+                            <li class="flex items-center text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Real-time updates</span>
+                            </li>
+                            <li class="flex items-center text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Priority support</span>
+                            </li>
+                        </ul>
+                        
+                        <button id="getStartedFreeBtn" class="btn btn-secondary py-2 px-4 w-full">Get Started</button>
+                    </div>
+                    
+                    <!-- Premium Plan -->
+                    <div class="pricing-card card p-6 border border-gray-800 relative overflow-hidden">
+                        <!-- Popular badge -->
+                        <div class="absolute top-0 right-0 bg-red-600 text-white px-4 py-1 transform rotate-45 translate-x-8 translate-y-2">
+                            <span class="text-xs font-semibold">POPULAR</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h3 class="text-xl font-semibold">Premium Plan</h3>
+                            <p class="text-sm text-gray-400 mt-1">Advanced features for power users</p>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <span class="text-3xl font-bold">₱75</span>
+                            <span class="text-sm text-gray-400">/month</span>
+                        </div>
+                        
+                        <ul class="space-y-2 mb-6">
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Process up to 10 accounts</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Priority cookie processing</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Advanced account management</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Real-time updates</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Priority support</span>
+                            </li>
+                        </ul>
+                        
+                        <div class="space-y-2">
+                            <button id="buyPremiumBtn" class="btn btn-primary py-2 px-4 w-full">Buy Premium</button>
+                            <button id="redeemCodeBtn" class="btn btn-secondary py-2 px-4 w-full">Redeem Code</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features section -->
+                <div class="mt-16">
+                    <h2 class="text-2xl font-bold text-center mb-8">Key Features</h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Feature 1 -->
+                        <div class="card p-4 border border-gray-800">
+                            <div class="bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium mb-2">Secure Cookies</h3>
+                            <p class="text-gray-400 text-sm">Our system securely retrieves and manages Facebook cookies for your accounts.</p>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div class="card p-4 border border-gray-800">
+                            <div class="bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium mb-2">Multiple Accounts</h3>
+                            <p class="text-gray-400 text-sm">Manage up to 10 accounts with our premium plan for seamless integration.</p>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div class="card p-4 border border-gray-800">
+                            <div class="bg-gray-800 rounded-full w-12 h-12 flex items-center justify-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium mb-2">Instant Processing</h3>
+                            <p class="text-gray-400 text-sm">Real-time cookie generation and account management with zero delay.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auth views -->
+            <div id="authViews" class="hidden max-w-md mx-auto">
+                <!-- Login view -->
+                <div id="loginView" class="card p-6 border border-gray-800 fade-in">
+                    <h2 class="text-xl font-semibold mb-4">Login to your account</h2>
+                    <form id="loginForm" class="space-y-4">
+                        <div>
+                            <label for="username" class="block text-sm font-medium mb-1">Username</label>
+                            <input type="text" id="username" class="input" placeholder="Enter your username" required>
+                        </div>
+                        <div>
+                            <label for="password" class="block text-sm font-medium mb-1">Password</label>
+                            <input type="password" id="password" class="input" placeholder="Enter your password" required>
+                        </div>
+                        <div id="loginError" class="text-red-500 text-sm hidden"></div>
+                        <button type="submit" id="loginSubmitBtn" class="btn btn-primary py-2 px-4 w-full flex items-center justify-center">
+                            <span>Login</span>
+                            <div id="loginSpinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </form>
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-400">Don't have an account? <button id="switchToRegisterBtn" class="text-red-600 hover:underline">Register</button></p>
+                    </div>
+                </div>
+
+                <!-- Register view -->
+                <div id="registerView" class="card p-6 border border-gray-800 hidden fade-in">
+                    <h2 class="text-xl font-semibold mb-4">Create a new account</h2>
+                    <form id="registerForm" class="space-y-4">
+                        <div>
+                            <label for="newUsername" class="block text-sm font-medium mb-1">Username</label>
+                            <input type="text" id="newUsername" class="input" placeholder="Choose a username" required>
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium mb-1">Password</label>
+                            <input type="password" id="newPassword" class="input" placeholder="Choose a password" required>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium mb-1">Confirm Password</label>
+                            <input type="password" id="confirmPassword" class="input" placeholder="Confirm your password" required>
+                        </div>
+                        <div id="registerError" class="text-red-500 text-sm hidden"></div>
+                        <button type="submit" id="registerSubmitBtn" class="btn btn-primary py-2 px-4 w-full flex items-center justify-center">
+                            <span>Register</span>
+                            <div id="registerSpinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </form>
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-400">Already have an account? <button id="switchToLoginBtn" class="text-red-600 hover:underline">Login</button></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard view -->
+            <div id="dashboardView" class="hidden max-w-4xl mx-auto fade-in">
+                <!-- User profile -->
+                <div class="card p-6 border border-gray-800 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center">
+                                <h2 class="text-xl font-semibold">Your Profile</h2>
+                                <span class="real-time-indicator ml-2 text-xs text-green-500">LIVE</span>
+                            </div>
+                            <div class="flex flex-wrap items-center mt-2 gap-2">
+                                <span id="userFbName" class="text-lg">User Name</span>
+                                <span id="dashboardPlanBadge" class="badge badge-primary">Free</span>
+                                <span id="planExpiry" class="text-xs text-gray-400 hidden"></span>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-48">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-400">Account Usage</span>
+                                <span id="planLimits" class="text-sm text-gray-400">0/2</span>
+                            </div>
+                            <div class="progress">
+                                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="border-b border-gray-800 mb-6">
+                    <div class="flex overflow-x-auto hide-scrollbar">
+                        <button id="addAccountTab" class="tab tab-active py-3 px-4">Add Account</button>
+                        <button id="manageAccountsTab" class="tab py-3 px-4">Manage Accounts</button>
+                        <button id="redeemTab" class="tab py-3 px-4">Redeem Code</button>
+                        <button id="settingsTab" class="tab py-3 px-4">Settings</button>
+                    </div>
+                </div>
+
+                <!-- Add Account Section -->
+                <div id="addAccountSection" class="card p-6 border border-gray-800 fade-in">
+                    <h2 class="text-xl font-semibold mb-4">Add Facebook Account</h2>
+                    <form id="cookieForm" class="space-y-4">
+                        <div>
+                            <label for="email" class="block text-sm font-medium mb-1">Email</label>
+                            <input type="email" id="email" class="input" placeholder="Enter Facebook email" required>
+                        </div>
+                        <div>
+                            <label for="fbPassword" class="block text-sm font-medium mb-1">Password</label>
+                            <input type="password" id="fbPassword" class="input" placeholder="Enter Facebook password" required>
+                        </div>
+                        <div id="addAccountError" class="text-red-500 text-sm hidden"></div>
+                        <button type="submit" class="btn btn-primary py-2 px-4 w-full flex items-center justify-center">
+                            <span id="submitText">Get Cookie</span>
+                            <div id="submitSpinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </form>
+
+                    <!-- Results section -->
+                    <div id="resultSection" class="mt-6 hidden">
+                        <h3 class="text-lg font-medium mb-2">Cookie Result</h3>
+                        <div class="relative">
+                            <textarea id="cookieResult" class="input h-24 resize-none font-mono text-xs" readonly></textarea>
+                            <button id="copyBtn" class="absolute top-2 right-2 p-1 bg-gray-800 rounded hover:bg-gray-700" title="Copy to clipboard">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                                    <path d="M4 16V4a2 2 0 0 1 2-2h10"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button id="clearResultBtn" class="btn btn-secondary py-1 px-3 text-sm">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Accounts Section -->
+                <div id="manageAccountsSection" class="card p-6 border border-gray-800 hidden fade-in">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Your Accounts</h2>
+                        <button id="refreshAccountsBtn" class="btn btn-secondary p-1" title="Refresh accounts">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div id="accountsList" class="space-y-2">
+                        <!-- Account items will be populated here -->
+                    </div>
+                    
+                    <div id="noAccounts" class="text-center py-8 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <p>No accounts added yet</p>
+                        <button id="addFirstAccountBtn" class="btn btn-secondary py-1 px-3 text-sm mt-4">Add Your First Account</button>
+                    </div>
+
+                    <div id="accountsLoader" class="text-center py-8 hidden">
+                        <div class="spinner mx-auto"></div>
+                        <p class="text-gray-400 mt-2">Loading accounts...</p>
+                    </div>
+                </div>
+
+                <!-- Redeem Code Section -->
+                <div id="redeemSection" class="card p-6 border border-gray-800 hidden fade-in">
+                    <h2 class="text-xl font-semibold mb-4">Redeem Premium Code</h2>
+                    <p class="text-gray-400 mb-4">Enter your premium code to upgrade your account.</p>
+                    
+                    <form id="redeemForm" class="space-y-4">
+                        <div>
+                            <label for="redeemCode" class="block text-sm font-medium mb-1">Redemption Code</label>
+                            <input type="text" id="redeemCode" class="input" placeholder="Enter your code" required>
+                        </div>
+                        <div id="redeemError" class="text-red-500 text-sm hidden"></div>
+                        <button type="submit" class="btn btn-primary py-2 px-4 w-full flex items-center justify-center">
+                            <span id="redeemBtnText">Redeem Code</span>
+                            <div id="redeemSpinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </form>
+                    
+                    <div class="mt-6 bg-gray-800 p-4 rounded-lg">
+                        <h3 class="text-md font-medium mb-2">Premium Benefits</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Process up to 10 accounts (instead of 2)</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Priority cookie processing</span>
+                            </li>
+                            <li class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Premium support via direct contact</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>Don't have a code? <a href="#" id="contactLink" class="text-red-600 hover:underline">Contact us</a> to purchase premium access.</p>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settingsSection" class="card p-6 border border-gray-800 hidden fade-in">
+                    <h2 class="text-xl font-semibold mb-4">Account Settings</h2>
+                    
+                    <div class="space-y-6">
+                        <!-- Theme settings -->
+                        <div class="border-b border-gray-800 pb-4">
+                            <h3 class="text-md font-medium mb-2">Appearance</h3>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">Dark Mode</span>
+                                <label class="theme-switch">
+                                    <input type="checkbox" id="settingsThemeToggle">
+                                    <span class="theme-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Account information -->
+                        <div class="border-b border-gray-800 pb-4">
+                            <h3 class="text-md font-medium mb-2">Account Information</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-400">Username</span>
+                                    <span id="settingsUsername" class="text-sm">username</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-400">Plan</span>
+                                    <span id="settingsPlan" class="text-sm">Free</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-400">Accounts Used</span>
+                                    <span id="settingsAccountsUsed" class="text-sm">0/2</span>
+                                </div>
+                                <div id="settingsExpiryContainer" class="flex justify-between hidden">
+                                    <span class="text-sm text-gray-400">Expires</span>
+                                    <span id="settingsExpiry" class="text-sm">Never</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Change password -->
+                        <div>
+                            <h3 class="text-md font-medium mb-2">Change Password</h3>
+                            <form id="changePasswordForm" class="space-y-4">
+                                <div>
+                                    <label for="currentPassword" class="block text-sm font-medium mb-1">Current Password</label>
+                                    <input type="password" id="currentPassword" class="input" placeholder="Enter current password" required>
+                                </div>
+                                <div>
+                                    <label for="newSettingsPassword" class="block text-sm font-medium mb-1">New Password</label>
+                                    <input type="password" id="newSettingsPassword" class="input" placeholder="Enter new password" required>
+                                </div>
+                                <div>
+                                    <label for="confirmSettingsPassword" class="block text-sm font-medium mb-1">Confirm New Password</label>
+                                    <input type="password" id="confirmSettingsPassword" class="input" placeholder="Confirm new password" required>
+                                </div>
+                                <div id="changePasswordError" class="text-red-500 text-sm hidden"></div>
+                                <button type="submit" id="changePasswordBtn" class="btn btn-primary py-2 px-4 flex items-center justify-center">
+                                    <span>Update Password</span>
+                                    <div id="changePasswordSpinner" class="spinner ml-2 hidden"></div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-800 py-4">
+            <div class="container mx-auto px-4 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 WIZ. All rights reserved.</p>
+                <div class="mt-2 flex justify-center space-x-4">
+                    <a href="#" class="hover:text-white">Terms</a>
+                    <a href="#" class="hover:text-white">Privacy</a>
+                    <a href="#" id="adminLoginLink" class="hover:text-white">Admin</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Redemption modal -->
+        <div id="redemptionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="card p-6 max-w-md w-full mx-4">
+                <h2 class="text-xl font-semibold mb-4">Redeem Premium Code</h2>
+                <form id="modalRedeemForm" class="space-y-4">
+                    <div>
+                        <label for="modalRedeemCode" class="block text-sm font-medium mb-1">Redemption Code</label>
+                        <input type="text" id="modalRedeemCode" class="input" placeholder="Enter your code" required>
+                    </div>
+                    <div id="modalRedeemError" class="text-red-500 text-sm hidden"></div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="closeRedemptionBtn" class="btn btn-secondary py-2 px-4">Cancel</button>
+                        <button type="submit" class="btn btn-primary py-2 px-4">Redeem</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Contact modal -->
+        <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="card p-6 max-w-md w-full mx-4">
+                <h2 class="text-xl font-semibold mb-4">Contact Us</h2>
+                <p class="mb-4">To purchase premium access for ₱75/month, please contact us on Facebook:</p>
+                
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <p class="font-medium">Steps to purchase:</p>
+                    <ol class="list-decimal list-inside mt-2 space-y-1 text-gray-300">
+                        <li>Send a message mentioning "WIZ Premium"</li>
+                        <li>Make the payment via available methods</li>
+                        <li>Receive your unique redemption code</li>
+                        <li>Enter the code in the redemption section</li>
+                    </ol>
+                </div>
+                
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="closeContactBtn" class="btn btn-secondary py-2 px-4">Close</button>
+                    <a href="https://facebook.com/yourprofile" target="_blank" id="contactFbBtn" class="btn btn-primary py-2 px-4">
+                        Contact on Facebook
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Account Confirmation Modal -->
+        <div id="deleteAccountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="card p-6 max-w-md w-full mx-4">
+                <h2 class="text-xl font-semibold mb-2">Delete Account</h2>
+                <p class="mb-4 text-gray-400">Are you sure you want to delete this account? This action cannot be undone.</p>
+                
+                <div class="p-3 border border-gray-800 rounded mb-4">
+                    <p id="deleteAccountEmail" class="font-medium"></p>
+                </div>
+                
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelDeleteBtn" class="btn btn-secondary py-2 px-4">Cancel</button>
+                    <button type="button" id="confirmDeleteBtn" class="btn btn-destructive bg-red-900 hover:bg-red-800 py-2 px-4 flex items-center justify-center">
+                        <span>Delete</span>
+                        <div id="deleteSpinner" class="spinner ml-2 hidden"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toast" class="toast">
+            <p id="toastMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const app = {
+            // Views
+            pricingView: document.getElementById('pricingView'),
+            authViews: document.getElementById('authViews'),
+            loginView: document.getElementById('loginView'),
+            registerView: document.getElementById('registerView'),
+            dashboardView: document.getElementById('dashboardView'),
+            
+            // Sections
+            addAccountSection: document.getElementById('addAccountSection'),
+            manageAccountsSection: document.getElementById('manageAccountsSection'),
+            redeemSection: document.getElementById('redeemSection'),
+            settingsSection: document.getElementById('settingsSection'),
+            resultSection: document.getElementById('resultSection'),
+            accountsList: document.getElementById('accountsList'),
+            noAccounts: document.getElementById('noAccounts'),
+            accountsLoader: document.getElementById('accountsLoader'),
+            
+            // Tabs
+            addAccountTab: document.getElementById('addAccountTab'),
+            manageAccountsTab: document.getElementById('manageAccountsTab'),
+            redeemTab: document.getElementById('redeemTab'),
+            settingsTab: document.getElementById('settingsTab'),
+            
+            // Forms
+            loginForm: document.getElementById('loginForm'),
+            registerForm: document.getElementById('registerForm'),
+            cookieForm: document.getElementById('cookieForm'),
+            redeemForm: document.getElementById('redeemForm'),
+            modalRedeemForm: document.getElementById('modalRedeemForm'),
+            changePasswordForm: document.getElementById('changePasswordForm'),
+            
+            // Auth Elements
+            loginBtn: document.getElementById('loginBtn'),
+            registerBtn: document.getElementById('registerBtn'),
+            mobileLoginBtn: document.getElementById('mobileLoginBtn'),
+            mobileRegisterBtn: document.getElementById('mobileRegisterBtn'),
+            loginSubmitBtn: document.getElementById('loginSubmitBtn'),
+            registerSubmitBtn: document.getElementById('registerSubmitBtn'),
+            loginSpinner: document.getElementById('loginSpinner'),
+            registerSpinner: document.getElementById('registerSpinner'),
+            loginError: document.getElementById('loginError'),
+            registerError: document.getElementById('registerError'),
+            switchToRegisterBtn: document.getElementById('switchToRegisterBtn'),
+            switchToLoginBtn: document.getElementById('switchToLoginBtn'),
+            
+            // Navigation
+            logoutBtn: document.getElementById('logoutBtn'),
+            mobileLogoutBtn: document.getElementById('mobileLogoutBtn'),
+            mobileMenuBtn: document.getElementById('mobile-menu-btn'),
+            pricingBtn: document.getElementById('pricingBtn'),
+            mobilePricingBtn: document.getElementById('mobilePricingBtn'),
+            
+            // User info displays
+            loginRegisterBtns: document.getElementById('loginRegisterBtns'),
+            mobileLoginRegisterBtns: document.getElementById('mobileLoginRegisterBtns'),
+            userControls: document.getElementById('userControls'),
+            mobileUserControls: document.getElementById('mobileUserControls'),
+            userName: document.getElementById('userName'),
+            mobileUserName: document.getElementById('mobileUserName'),
+            userFbName: document.getElementById('userFbName'),
+            planBadge: document.getElementById('planBadge'),
+            mobilePlanBadge: document.getElementById('mobilePlanBadge'),
+            dashboardPlanBadge: document.getElementById('dashboardPlanBadge'),
+            planExpiry: document.getElementById('planExpiry'),
+            
+            // Buttons and actions
+            copyBtn: document.getElementById('copyBtn'),
+            clearResultBtn: document.getElementById('clearResultBtn'),
+            getStartedFreeBtn: document.getElementById('getStartedFreeBtn'),
+            buyPremiumBtn: document.getElementById('buyPremiumBtn'),
+            redeemCodeBtn: document.getElementById('redeemCodeBtn'),
+            refreshAccountsBtn: document.getElementById('refreshAccountsBtn'),
+            addFirstAccountBtn: document.getElementById('addFirstAccountBtn'),
+            closeRedemptionBtn: document.getElementById('closeRedemptionBtn'),
+            contactLink: document.getElementById('contactLink'),
+            closeContactBtn: document.getElementById('closeContactBtn'),
+            adminLoginLink: document.getElementById('adminLoginLink'),
+            
+            // Mobile menu
+            mobileMenu: document.getElementById('mobile-menu'),
+            
+            // Modals
+            redemptionModal: document.getElementById('redemptionModal'),
+            contactModal: document.getElementById('contactModal'),
+            deleteAccountModal: document.getElementById('deleteAccountModal'),
+            cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+            deleteAccountEmail: document.getElementById('deleteAccountEmail'),
+            deleteSpinner: document.getElementById('deleteSpinner'),
+            
+            // Delete account info
+            currentDeleteAccountId: null,
+            
+            // Inputs
+            username: document.getElementById('username'),
+            password: document.getElementById('password'),
+            newUsername: document.getElementById('newUsername'),
+            newPassword: document.getElementById('newPassword'),
+            confirmPassword: document.getElementById('confirmPassword'),
+            email: document.getElementById('email'),
+            fbPassword: document.getElementById('fbPassword'),
+            redeemCode: document.getElementById('redeemCode'),
+            modalRedeemCode: document.getElementById('modalRedeemCode'),
+            currentPassword: document.getElementById('currentPassword'),
+            newSettingsPassword: document.getElementById('newSettingsPassword'),
+            confirmSettingsPassword: document.getElementById('confirmSettingsPassword'),
+            
+            // Settings
+            settingsUsername: document.getElementById('settingsUsername'),
+            settingsPlan: document.getElementById('settingsPlan'),
+            settingsAccountsUsed: document.getElementById('settingsAccountsUsed'),
+            settingsExpiryContainer: document.getElementById('settingsExpiryContainer'),
+            settingsExpiry: document.getElementById('settingsExpiry'),
+            changePasswordBtn: document.getElementById('changePasswordBtn'),
+            changePasswordSpinner: document.getElementById('changePasswordSpinner'),
+            changePasswordError: document.getElementById('changePasswordError'),
+            
+            // Error displays
+            modalRedeemError: document.getElementById('modalRedeemError'),
+            redeemError: document.getElementById('redeemError'),
+            addAccountError: document.getElementById('addAccountError'),
+            
+            // Theme toggle
+            themeToggle: document.getElementById('themeToggle'),
+            mobileThemeToggle: document.getElementById('mobileThemeToggle'),
+            settingsThemeToggle: document.getElementById('settingsThemeToggle'),
+            
+            // Output elements
+            cookieResult: document.getElementById('cookieResult'),
+            planLimits: document.getElementById('planLimits'),
+            progressBar: document.getElementById('progressBar'),
+            
+            // Submit button elements
+            submitText: document.getElementById('submitText'),
+            submitSpinner: document.getElementById('submitSpinner'),
+            redeemBtnText: document.getElementById('redeemBtnText'),
+            redeemSpinner: document.getElementById('redeemSpinner'),
+            
+            // Toast
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toastMessage')
+        };
+
+        // State
+        const state = {
+            user: null,
+            userId: null,
+            userName: null,
+            plan: null,
+            accountsProcessed: 0,
+            maxAccounts: 0,
+            planExpiry: null,
+            accounts: [],
+            isLoading: false,
+            currentTab: 'addAccount', // Default tab
+            darkMode: true,
+            deleteAccountId: null
+        };
+
+        // Theme management
+        function initTheme() {
+            app.themeToggle.checked = state.darkMode;
+            app.mobileThemeToggle.checked = state.darkMode;
+            app.settingsThemeToggle.checked = state.darkMode;
+        }
+
+        function toggleTheme() {
+            state.darkMode = !state.darkMode;
+            app.themeToggle.checked = state.darkMode;
+            app.mobileThemeToggle.checked = state.darkMode;
+            app.settingsThemeToggle.checked = state.darkMode;
+            
+            // Here you would actually apply the theme changes
+            // For this demo, we're already using dark theme
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            app.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            
+            // Theme toggles
+            app.themeToggle.addEventListener('change', toggleTheme);
+            app.mobileThemeToggle.addEventListener('change', toggleTheme);
+            app.settingsThemeToggle.addEventListener('change', toggleTheme);
+            
+            // Login/Register buttons
+            app.loginBtn.addEventListener('click', () => showAuthView('login'));
+            app.registerBtn.addEventListener('click', () => showAuthView('register'));
+            app.mobileLoginBtn.addEventListener('click', () => {
+                toggleMobileMenu();
+                showAuthView('login');
+            });
+            app.mobileRegisterBtn.addEventListener('click', () => {
+                toggleMobileMenu();
+                showAuthView('register');
+            });
+            
+            // Auth view switching
+            app.switchToRegisterBtn.addEventListener('click', () => {
+                app.loginView.classList.add('hidden');
+                app.registerView.classList.remove('hidden');
+            });
+            app.switchToLoginBtn.addEventListener('click', () => {
+                app.registerView.classList.add('hidden');
+                app.loginView.classList.remove('hidden');
+            });
+            
+            // Admin link
+            app.adminLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = '/admin';
+            });
+            
+            // Logout
+            app.logoutBtn.addEventListener('click', handleLogout);
+            app.mobileLogoutBtn.addEventListener('click', handleLogout);
+            
+            // Navigation
+            app.pricingBtn.addEventListener('click', showPricingView);
+            app.mobilePricingBtn.addEventListener('click', () => {
+                toggleMobileMenu();
+                showPricingView();
+            });
+            
+            // Pricing buttons
+            app.getStartedFreeBtn.addEventListener('click', () => showAuthView('register'));
+            app.buyPremiumBtn.addEventListener('click', showContactModal);
+            app.redeemCodeBtn.addEventListener('click', showRedemptionModal);
+            
+            // Modal controls
+            app.closeRedemptionBtn.addEventListener('click', hideRedemptionModal);
+            app.closeContactBtn.addEventListener('click', hideContactModal);
+            app.contactLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showContactModal();
+            });
+            
+            // Delete account modal
+            app.cancelDeleteBtn.addEventListener('click', hideDeleteAccountModal);
+            app.confirmDeleteBtn.addEventListener('click', confirmDeleteAccount);
+            
+            // Dashboard tabs
+            app.addAccountTab.addEventListener('click', () => switchTab('addAccount'));
+            app.manageAccountsTab.addEventListener('click', () => switchTab('manageAccounts'));
+            app.redeemTab.addEventListener('click', () => switchTab('redeem'));
+            app.settingsTab.addEventListener('click', () => switchTab('settings'));
+            
+            // Account management
+            app.refreshAccountsBtn.addEventListener('click', fetchAndDisplayAccounts);
+            app.addFirstAccountBtn.addEventListener('click', () => switchTab('addAccount'));
+            app.clearResultBtn.addEventListener('click', () => {
+                app.resultSection.classList.add('hidden');
+                app.cookieResult.value = '';
+            });
+            
+            // Forms
+            app.loginForm.addEventListener('submit', handleLogin);
+            app.registerForm.addEventListener('submit', handleRegister);
+            app.cookieForm.addEventListener('submit', handleCookieForm);
+            app.redeemForm.addEventListener('submit', handleRedeemCode);
+            app.modalRedeemForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = app.modalRedeemCode.value;
+                hideRedemptionModal();
+                redeemCode(code);
+            });
+            app.changePasswordForm.addEventListener('submit', handleChangePassword);
+            
+            // Copy button
+            app.copyBtn.addEventListener('click', copyToClipboard);
+        }
+
+        // UI Functions
+        function toggleMobileMenu() {
+            app.mobileMenu.classList.toggle('hidden');
+        }
+
+        function showPricingView() {
+            app.pricingView.classList.remove('hidden');
+            app.authViews.classList.add('hidden');
+            app.dashboardView.classList.add('hidden');
+        }
+
+        function showAuthView(view) {
+            app.pricingView.classList.add('hidden');
+            app.authViews.classList.remove('hidden');
+            app.dashboardView.classList.add('hidden');
+            
+            if (view === 'login') {
+                app.loginView.classList.remove('hidden');
+                app.registerView.classList.add('hidden');
+            } else {
+                app.registerView.classList.remove('hidden');
+                app.loginView.classList.add('hidden');
+            }
+        }
+
+        function showDashboard() {
+            app.pricingView.classList.add('hidden');
+            app.authViews.classList.add('hidden');
+            app.dashboardView.classList.remove('hidden');
+            
+            // Update user info in UI
+            updateUserInfo();
+            
+            // Show logged in UI
+            app.loginRegisterBtns.classList.add('hidden');
+            app.mobileLoginRegisterBtns.classList.add('hidden');
+            app.userControls.classList.remove('hidden');
+            app.userControls.classList.add('flex');
+            app.mobileUserControls.classList.remove('hidden');
+            
+            // Set default tab
+            switchTab(state.currentTab);
+        }
+
+        function updateUserInfo() {
+            // Username displays
+            app.userName.textContent = state.userName;
+            app.mobileUserName.textContent = state.userName;
+            app.userFbName.textContent = state.userName;
+            app.settingsUsername.textContent = state.userName;
+            
+            // Plan displays
+            updatePlanBadges();
+            app.planLimits.textContent = `${state.accountsProcessed}/${state.maxAccounts}`;
+            app.settingsAccountsUsed.textContent = `${state.accountsProcessed}/${state.maxAccounts}`;
+            app.settingsPlan.textContent = capitalize(state.plan);
+            
+            // Progress bar
+            const percentage = (state.accountsProcessed / state.maxAccounts) * 100;
+            app.progressBar.style.width = `${percentage}%`;
+            
+            // Plan expiry
+            if (state.planExpiry) {
+                app.planExpiry.classList.remove('hidden');
+                app.settingsExpiryContainer.classList.remove('hidden');
+                
+                const expiryDate = new Date(state.planExpiry);
+                const formattedDate = expiryDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                app.planExpiry.textContent = `Expires: ${formattedDate}`;
+                app.settingsExpiry.textContent = formattedDate;
+            } else {
+                app.planExpiry.classList.add('hidden');
+                app.settingsExpiryContainer.classList.add('hidden');
+            }
+        }
+
+        function updatePlanBadges() {
+            let badgeClass = 'badge-primary';
+            
+            if (state.plan === 'premium') {
+                badgeClass = 'badge-premium';
+            } else if (state.plan === 'admin') {
+                badgeClass = 'badge-admin';
+            }
+            
+            // Remove all possible classes first
+            app.planBadge.classList.remove('badge-primary', 'badge-premium', 'badge-admin');
+            app.mobilePlanBadge.classList.remove('badge-primary', 'badge-premium', 'badge-admin');
+            app.dashboardPlanBadge.classList.remove('badge-primary', 'badge-premium', 'badge-admin');
+            
+            // Add the appropriate class
+            app.planBadge.classList.add(badgeClass);
+            app.mobilePlanBadge.classList.add(badgeClass);
+            app.dashboardPlanBadge.classList.add(badgeClass);
+            
+            // Set the text content
+            app.planBadge.textContent = capitalize(state.plan);
+            app.mobilePlanBadge.textContent = capitalize(state.plan);
+            app.dashboardPlanBadge.textContent = capitalize(state.plan);
+        }
+
+        function showLoginView() {
+            app.pricingView.classList.remove('hidden');
+            app.authViews.classList.add('hidden');
+            app.dashboardView.classList.add('hidden');
+            
+            // Show login UI
+            app.loginRegisterBtns.classList.remove('hidden');
+            app.mobileLoginRegisterBtns.classList.remove('hidden');
+            app.userControls.classList.add('hidden');
+            app.userControls.classList.remove('flex');
+            app.mobileUserControls.classList.add('hidden');
+        }
+
+        function switchTab(tabName) {
+            state.currentTab = tabName;
+            
+            // Hide all sections
+            app.addAccountSection.classList.add('hidden');
+            app.manageAccountsSection.classList.add('hidden');
+            app.redeemSection.classList.add('hidden');
+            app.settingsSection.classList.add('hidden');
+            
+            // Reset active tab styles
+            app.addAccountTab.classList.remove('tab-active');
+            app.manageAccountsTab.classList.remove('tab-active');
+            app.redeemTab.classList.remove('tab-active');
+            app.settingsTab.classList.remove('tab-active');
+            
+            // Show selected section and highlight tab
+            if (tabName === 'addAccount') {
+                app.addAccountSection.classList.remove('hidden');
+                app.addAccountTab.classList.add('tab-active');
+            } else if (tabName === 'manageAccounts') {
+                app.manageAccountsSection.classList.remove('hidden');
+                app.manageAccountsTab.classList.add('tab-active');
+                fetchAndDisplayAccounts();
+            } else if (tabName === 'redeem') {
+                app.redeemSection.classList.remove('hidden');
+                app.redeemTab.classList.add('tab-active');
+            } else if (tabName === 'settings') {
+                app.settingsSection.classList.remove('hidden');
+                app.settingsTab.classList.add('tab-active');
+            }
+        }
+
+        function showLoading(type, isLoading) {
+            switch (type) {
+                case 'login':
+                    if (isLoading) {
+                        app.loginSubmitBtn.disabled = true;
+                        app.loginSpinner.classList.remove('hidden');
+                    } else {
+                        app.loginSubmitBtn.disabled = false;
+                        app.loginSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'register':
+                    if (isLoading) {
+                        app.registerSubmitBtn.disabled = true;
+                        app.registerSpinner.classList.remove('hidden');
+                    } else {
+                        app.registerSubmitBtn.disabled = false;
+                        app.registerSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'cookie':
+                    if (isLoading) {
+                        app.submitText.textContent = 'Processing...';
+                        app.submitSpinner.classList.remove('hidden');
+                    } else {
+                        app.submitText.textContent = 'Get Cookie';
+                        app.submitSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'redeem':
+                    if (isLoading) {
+                        app.redeemBtnText.textContent = 'Processing...';
+                        app.redeemSpinner.classList.remove('hidden');
+                    } else {
+                        app.redeemBtnText.textContent = 'Redeem Code';
+                        app.redeemSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'delete':
+                    if (isLoading) {
+                        app.confirmDeleteBtn.disabled = true;
+                        app.deleteSpinner.classList.remove('hidden');
+                    } else {
+                        app.confirmDeleteBtn.disabled = false;
+                        app.deleteSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'password':
+                    if (isLoading) {
+                        app.changePasswordBtn.disabled = true;
+                        app.changePasswordSpinner.classList.remove('hidden');
+                    } else {
+                        app.changePasswordBtn.disabled = false;
+                        app.changePasswordSpinner.classList.add('hidden');
+                    }
+                    break;
+                    
+                case 'accounts':
+                    if (isLoading) {
+                        app.accountsLoader.classList.remove('hidden');
+                        app.accountsList.classList.add('hidden');
+                        app.noAccounts.classList.add('hidden');
+                    } else {
+                        app.accountsLoader.classList.add('hidden');
+                        // Account list or no accounts message will be shown by renderAccounts
+                    }
+                    break;
+            }
+        }
+
+        function showRedemptionModal() {
+            app.redemptionModal.classList.remove('hidden');
+            app.modalRedeemCode.focus();
+        }
+
+        function hideRedemptionModal() {
+            app.redemptionModal.classList.add('hidden');
+            app.modalRedeemCode.value = '';
+            app.modalRedeemError.classList.add('hidden');
+        }
+
+        function showContactModal() {
+            app.contactModal.classList.remove('hidden');
+        }
+
+        function hideContactModal() {
+            app.contactModal.classList.add('hidden');
+        }
+
+        function showDeleteAccountModal(id, email) {
+            app.currentDeleteAccountId = id;
+            app.deleteAccountEmail.textContent = email;
+            app.deleteAccountModal.classList.remove('hidden');
+        }
+
+        function hideDeleteAccountModal() {
+            app.deleteAccountModal.classList.add('hidden');
+            app.currentDeleteAccountId = null;
+        }
+
+        function showToast(message, type = 'success') {
+            app.toastMessage.textContent = message;
+            app.toast.className = 'toast';
+            app.toast.classList.add(`toast-${type}`);
+            app.toast.classList.add('show');
+            
+            setTimeout(() => {
+                app.toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(type, message) {
+            switch (type) {
+                case 'login':
+                    app.loginError.textContent = message;
+                    app.loginError.classList.remove('hidden');
+                    break;
+                    
+                case 'register':
+                    app.registerError.textContent = message;
+                    app.registerError.classList.remove('hidden');
+                    break;
+                    
+                case 'redeem':
+                    app.redeemError.textContent = message;
+                    app.redeemError.classList.remove('hidden');
+                    break;
+                    
+                case 'modalRedeem':
+                    app.modalRedeemError.textContent = message;
+                    app.modalRedeemError.classList.remove('hidden');
+                    break;
+                    
+                case 'addAccount':
+                    app.addAccountError.textContent = message;
+                    app.addAccountError.classList.remove('hidden');
+                    break;
+                    
+                case 'password':
+                    app.changePasswordError.textContent = message;
+                    app.changePasswordError.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        function clearErrors() {
+            app.loginError.classList.add('hidden');
+            app.registerError.classList.add('hidden');
+            app.redeemError.classList.add('hidden');
+            app.modalRedeemError.classList.add('hidden');
+            app.addAccountError.classList.add('hidden');
+            app.changePasswordError.classList.add('hidden');
+        }
+
+        // Account management functions
+        function fetchAndDisplayAccounts() {
+            showLoading('accounts', true);
+            
+            fetch('/api/accounts')
+                .then(response => response.json())
+                .then(data => {
+                    showLoading('accounts', false);
+                    if (data.status === 'success') {
+                        state.accounts = data.accounts;
+                        renderAccounts();
+                    } else {
+                        showToast('Failed to load accounts', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching accounts:', error);
+                    showLoading('accounts', false);
+                    showToast('Failed to load accounts', 'error');
+                });
+        }
+
+        function renderAccounts() {
+            if (state.accounts.length === 0) {
+                app.accountsList.innerHTML = '';
+                app.accountsList.classList.add('hidden');
+                app.noAccounts.classList.remove('hidden');
+                return;
+            }
+            
+            app.noAccounts.classList.add('hidden');
+            app.accountsList.innerHTML = '';
+            app.accountsList.classList.remove('hidden');
+            
+            state.accounts.forEach(account => {
+                const accountItem = document.createElement('div');
+                accountItem.className = 'account-item flex items-center justify-between p-3 border border-gray-800 rounded mb-2';
+                
+                let createdAtDisplay = '';
+                if (account.created_at) {
+                    const createdAt = new Date(account.created_at);
+                    createdAtDisplay = createdAt.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                }
+                
+                accountItem.innerHTML = `
+                    <div>
+                        <p class="font-medium">${account.email}</p>
+                        ${createdAtDisplay ? `<p class="text-xs text-gray-400">Added: ${createdAtDisplay}</p>` : ''}
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="view-cookie p-1 bg-gray-800 rounded hover:bg-gray-700" data-id="${account.id}" title="View Cookie">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                        <button class="delete-account p-1 bg-gray-800 rounded hover:bg-gray-700" data-id="${account.id}" data-email="${account.email}" title="Delete Account">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                app.accountsList.appendChild(accountItem);
+                
+                // Add event listeners to buttons
+                const viewButton = accountItem.querySelector('.view-cookie');
+                const deleteButton = accountItem.querySelector('.delete-account');
+                
+                viewButton.addEventListener('click', () => viewCookie(account.id));
+                deleteButton.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const email = this.getAttribute('data-email');
+                    showDeleteAccountModal(id, email);
+                });
+            });
+        }
+
+        async function viewCookie(accountId) {
+            try {
+                const response = await fetch(`/api/accounts/${accountId}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    app.cookieResult.value = data.account.cookie;
+                    switchTab('addAccount');
+                    app.resultSection.classList.remove('hidden');
+                    showToast('Cookie loaded successfully');
+                } else {
+                    showToast(data.message || 'Failed to load cookie', 'error');
+                }
+            } catch (error) {
+                console.error('Error viewing cookie:', error);
+                showToast('Failed to load cookie', 'error');
+            }
+        }
+
+        async function confirmDeleteAccount() {
+            if (!app.currentDeleteAccountId) return;
+            
+            showLoading('delete', true);
+            
+            try {
+                const response = await fetch(`/api/accounts/${app.currentDeleteAccountId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                showLoading('delete', false);
+                
+                if (data.status === 'success') {
+                    hideDeleteAccountModal();
+                    state.accountsProcessed = data.accounts_processed;
+                    updateUserInfo();
+                    fetchAndDisplayAccounts();
+                    showToast('Account deleted successfully');
+                } else {
+                    showToast(data.message || 'Failed to delete account', 'error');
+                }
+            } catch (error) {
+                showLoading('delete', false);
+                console.error('Error deleting account:', error);
+                showToast('Failed to delete account', 'error');
+            }
+        }
+
+        // API Handlers
+        async function handleLogin(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const username = app.username.value;
+            const password = app.password.value;
+            
+            if (!username || !password) {
+                showError('login', 'Username and password are required');
+                return;
+            }
+            
+            showLoading('login', true);
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                showLoading('login', false);
+                
+                if (data.status === 'success') {
+                    state.userId = username;
+                    state.userName = username;
+                    state.plan = data.plan;
+                    state.accountsProcessed = data.accounts_processed;
+                    state.maxAccounts = data.max_accounts;
+                    state.planExpiry = data.plan_expires;
+                    
+                    // Clear login form
+                    app.username.value = '';
+                    app.password.value = '';
+                    
+                    // Update UI
+                    updateUserInfo();
+                    showDashboard();
+                    
+                    if (app.mobileMenu.classList.contains('hidden') === false) {
+                        toggleMobileMenu();
+                    }
+                    
+                    showToast('Logged in successfully');
+                } else {
+                    showError('login', data.message || 'Login failed');
+                    app.loginForm.classList.add('shake');
+                    setTimeout(() => {
+                        app.loginForm.classList.remove('shake');
+                    }, 500);
+                }
+            } catch (error) {
+                showLoading('login', false);
+                showError('login', 'Error connecting to server');
+                console.error(error);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const username = app.newUsername.value;
+            const password = app.newPassword.value;
+            const confirmPassword = app.confirmPassword.value;
+            
+            if (!username || !password || !confirmPassword) {
+                showError('register', 'All fields are required');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('register', 'Passwords do not match');
+                return;
+            }
+            
+            showLoading('register', true);
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                showLoading('register', false);
+                
+                if (data.status === 'success') {
+                    state.userId = username;
+                    state.userName = username;
+                    state.plan = data.plan;
+                    state.accountsProcessed = data.accounts_processed;
+                    state.maxAccounts = data.max_accounts;
+                    
+                    // Clear register form
+                    app.newUsername.value = '';
+                    app.newPassword.value = '';
+                    app.confirmPassword.value = '';
+                    
+                    // Update UI
+                    updateUserInfo();
+                    showDashboard();
+                    
+                    if (app.mobileMenu.classList.contains('hidden') === false) {
+                        toggleMobileMenu();
+                    }
+                    
+                    showToast('Account created successfully');
+                } else {
+                    showError('register', data.message || 'Registration failed');
+                    app.registerForm.classList.add('shake');
+                    setTimeout(() => {
+                        app.registerForm.classList.remove('shake');
+                    }, 500);
+                }
+            } catch (error) {
+                showLoading('register', false);
+                showError('register', 'Error connecting to server');
+                console.error(error);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Reset state
+                    state.userId = null;
+                    state.userName = null;
+                    state.plan = null;
+                    state.accountsProcessed = 0;
+                    state.maxAccounts = 0;
+                    state.planExpiry = null;
+                    state.accounts = [];
+                    
+                    // Reset UI
+                    app.resultSection.classList.add('hidden');
+                    app.cookieResult.value = '';
+                    app.email.value = '';
+                    app.fbPassword.value = '';
+                    
+                    // Mobile menu
+                    if (app.mobileMenu.classList.contains('hidden') === false) {
+                        toggleMobileMenu();
+                    }
+                    
+                    showLoginView();
+                    showToast('Logged out successfully');
+                }
+            } catch (error) {
+                showToast('Error logging out', 'error');
+                console.error(error);
+            }
+        }
+
+        async function handleCookieForm(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const email = app.email.value;
+            const password = app.fbPassword.value;
+            
+            if (!email || !password) {
+                showError('addAccount', 'Email and password are required');
+                return;
+            }
+            
+            showLoading('cookie', true);
+            
+            try {
+                const response = await fetch('/api/cookie-getter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                showLoading('cookie', false);
+                
+                if (data.status === 'success') {
+                    app.cookieResult.value = data.cookie;
+                    app.resultSection.classList.remove('hidden');
+                    
+                    state.accountsProcessed = data.accounts_processed;
+                    updateUserInfo();
+                    
+                    showToast('Account added successfully');
+                    
+                    // Clear the form
+                    app.email.value = '';
+                    app.fbPassword.value = '';
+                } else {
+                    showError('addAccount', data.message || 'Failed to get cookie');
+                }
+            } catch (error) {
+                showLoading('cookie', false);
+                showError('addAccount', 'Error connecting to server');
+                console.error(error);
+            }
+        }
+
+        async function handleRedeemCode(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const code = app.redeemCode.value;
+            
+            if (!code) {
+                showError('redeem', 'Redemption code is required');
+                return;
+            }
+            
+            redeemCode(code);
+        }
+
+        async function redeemCode(code) {
+            showLoading('redeem', true);
+            clearErrors();
+            
+            try {
+                const response = await fetch('/api/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                showLoading('redeem', false);
+                
+                if (data.status === 'success') {
+                    state.plan = data.plan;
+                    state.maxAccounts = data.max_accounts;
+                    state.planExpiry = data.plan_expires;
+                    
+                    updateUserInfo();
+                    app.redeemCode.value = '';
+                    
+                    showToast(data.message || 'Code redeemed successfully');
+                } else {
+                    showError('redeem', data.message || 'Failed to redeem code');
+                }
+            } catch (error) {
+                showLoading('redeem', false);
+                showError('redeem', 'Error connecting to server');
+                console.error(error);
+            }
+        }
+
+        async function handleChangePassword(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            const currentPassword = app.currentPassword.value;
+            const newPassword = app.newSettingsPassword.value;
+            const confirmPassword = app.confirmSettingsPassword.value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showError('password', 'All fields are required');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showError('password', 'New passwords do not match');
+                return;
+            }
+            
+            showLoading('password', true);
+            
+            try {
+                const response = await fetch('/api/user/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                showLoading('password', false);
+                
+                if (data.status === 'success') {
+                    // Clear the form
+                    app.currentPassword.value = '';
+                    app.newSettingsPassword.value = '';
+                    app.confirmSettingsPassword.value = '';
+                    
+                    showToast('Password updated successfully');
+                } else {
+                    showError('password', data.message || 'Failed to update password');
+                }
+            } catch (error) {
+                showLoading('password', false);
+                showError('password', 'Error connecting to server');
+                console.error(error);
+            }
+        }
+
+        function copyToClipboard() {
+            const cookieText = app.cookieResult.value;
+            
+            if (!cookieText) {
+                showToast('No cookie to copy', 'error');
+                return;
+            }
+            
+            navigator.clipboard.writeText(cookieText)
+                .then(() => {
+                    showToast('Cookie copied to clipboard');
+                })
+                .catch(err => {
+                    showToast('Failed to copy cookie', 'error');
+                    console.error(err);
+                });
+        }
+
+        // Check if user is already logged in
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/user/profile');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        state.userId = data.user_id;
+                        state.userName = data.user_id;
+                        state.plan = data.plan;
+                        state.accountsProcessed = data.accounts_processed;
+                        state.maxAccounts = data.max_accounts;
+                        state.planExpiry = data.plan_expires;
+                        
+                        updateUserInfo();
+                        showDashboard();
+                    } else {
+                        showLoginView();
+                    }
+                } else {
+                    showLoginView();
+                }
+            } catch (error) {
+                showLoginView();
+                console.error(error);
+            }
+        }
+
+        // Helper functions
+        function capitalize(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        // Initialize app
+        function init() {
+            initTheme();
+            setupEventListeners();
+            checkSession();
+        }
+
+        // Start the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
